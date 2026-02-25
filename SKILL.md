@@ -34,6 +34,16 @@ Default rule:
 1. Use Strict unless user asks Fast or task is clearly small and low risk.
 2. If uncertain, use Strict.
 
+### TDD Policy by Mode
+
+- Strict mode:
+  - Keep `test-driven-development` as default for feature and bugfix work.
+  - Require red -> green -> refactor evidence in `Test Hooks`.
+- Fast mode:
+  - Use `TDD-lite`: include at least one regression-oriented assertion or focused test hook.
+  - Full red -> green -> refactor is optional only for tiny low-risk edits.
+  - Never skip verification commands before completion.
+
 ## Role Activation
 
 Activation policy:
@@ -62,7 +72,7 @@ Role-to-skill mapping:
 Behavior rules:
 
 1. Invoke mapped helper skills proactively for the current role.
-2. Adapt depth by execution mode.
+2. Adapt depth by execution mode, including full TDD in Strict and TDD-lite in Fast.
 3. If a mapped skill is unavailable, state it once and continue with equivalent checklist fallback.
 4. Never ask the user to manually trigger helper skills unless blocked by missing access.
 
@@ -154,7 +164,10 @@ Use this field schema in every response for machine-readable consistency.
   - Automatically use `openai/screenshot` when visual capture/comparison or state inspection is possible.
 - Developer:
   - Write clean production-focused code from Architect + Designer outputs.
-  - Apply `test-driven-development` discipline for behavior changes.
+  - Apply mode-aware testing policy for behavior changes.
+  - Strict mode: full `test-driven-development` (red -> green -> refactor).
+  - Fast mode: `TDD-lite` with explicit regression checks.
+  - Never ship behavior changes without test evidence or clear verification commands.
 - Security Expert:
   - Apply `systematic-debugging` discipline before proposing fixes.
   - Analyze validation gaps, injection risks, data leaks, auth/session flaws, and unsafe logging/storage.
@@ -172,7 +185,7 @@ Each role must explicitly reference prior role output before adding new work.
 | `ui-ux-pro-max` | Use pattern-driven UI decisions and rationale | `Fallback Notes: ui-ux-pro-max unavailable. Applied baseline UI heuristics.` |
 | `openai/screenshot` | Use screenshots for evidence, comparisons, and UI state checks | `Tool Usage Notes: screenshot unavailable. Analysis based on text/code evidence.` |
 | `writing-plans` | Produce explicit file-level implementation steps | `Mode Notes: writing-plans unavailable. Produced compact manual plan.` |
-| `test-driven-development` | Follow red -> green -> refactor discipline | `Test Hooks: TDD skill unavailable. Added equivalent test-first checklist.` |
+| `test-driven-development` | Strict: enforce red -> green -> refactor. Fast: use TDD-lite regression checks. | `Test Hooks: TDD skill unavailable. Strict -> manual red/green checklist. Fast -> regression assertion plus verification commands.` |
 | `systematic-debugging` | Root-cause-first security remediation | `Developer Handoff: Used manual root-cause checklist fallback.` |
 | `verification-before-completion` | Require fresh command evidence before success claim | `Verification Evidence Plan: Skill unavailable. Added explicit manual verification commands.` |
 | `requesting-code-review` | Apply dedicated review gate for critical/high risk items | `Findings: Review-skill unavailable. Applied manual critical issue gate.` |
