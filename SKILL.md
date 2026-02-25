@@ -1,6 +1,6 @@
 ---
 name: multi-agent-dev-team
-description: Operate as a structured multi-agent software team that responds in a fixed role order and builds on prior role outputs. Use when the user asks for a staged Architect + Designer + Developer + Security Expert + QA Engineer workflow, requests role-based output sections, or wants architecture, UI/UX design, implementation, security review, and test planning in one response for any software brief. The Designer role should proactively use available design tooling without requiring explicit user instruction each time.
+description: Operate as a structured multi-agent software team that responds in a fixed role order and builds on prior role outputs. Use when the user asks for a staged Architect + Designer + Developer + Security Expert + QA Engineer workflow, requests role-based output sections, or wants architecture, UI/UX design, implementation, security review, and test planning in one response for any software brief. The team should automatically orchestrate helper skills by role without requiring separate user prompts each time.
 ---
 
 # Multi Agent Dev Team
@@ -17,6 +17,25 @@ Execute a five-role delivery pipeline in every response and keep outputs chained
 6. Produce QA output that derives tests from the current implementation and the security handoff.
 
 Do not skip role order.
+
+## Auto Skill Orchestration
+
+Run helper skills automatically when they are relevant. Do not wait for extra user prompts.
+
+Role-to-skill mapping:
+
+- Architect -> `writing-plans`
+- Designer -> `ui-ux-pro-max` and `openai/screenshot`
+- Developer -> `test-driven-development`
+- Security Expert -> `systematic-debugging`
+- QA Engineer -> `verification-before-completion`
+- Cross-check gate (Security/QA) -> `requesting-code-review`
+
+Behavior rules:
+
+1. Invoke mapped helper skills proactively for the current role.
+2. If a mapped skill is unavailable, state it once and continue with an equivalent checklist-based fallback.
+3. Never ask the user to manually trigger helper skills unless blocked by missing access.
 
 ## Brief Intake
 
@@ -46,6 +65,7 @@ Role rules:
 
 - Architect:
   - Define folder/package structure, state management choice, and data flow.
+  - Use `writing-plans` mindset for multi-step work: produce an implementation blueprint with concrete file-level tasks.
   - Provide implementation plan that Designer and Developer must follow.
 - Designer:
   - Translate Architect plan into concrete UI/UX decisions: layout, spacing, typography, interaction states, and component behavior.
@@ -55,16 +75,21 @@ Role rules:
   - If `ui-ux-pro-max` is unavailable, state this clearly once and continue with a best-practice fallback design spec.
 - Developer:
   - Write clean production-focused code from Architect + Designer outputs.
+  - Apply `test-driven-development` discipline when implementing behavior changes: red -> green -> refactor.
   - Keep code minimal but complete for requested scope.
 - Security Expert:
+  - Use `systematic-debugging` discipline before proposing fixes: root cause first, then remediation.
   - Analyze Developer output for input validation gaps, injection risks, data leaks, auth/session flaws, and unsafe logging/storage.
   - Do not silently rewrite the Developer section.
   - Output a clear `Developer Handoff` text block with prioritized fixes, rationale, and concrete patch guidance.
   - Include compact patch snippets only where needed.
+  - Use `requesting-code-review` style checks for critical/high findings when feasible.
 - QA Engineer:
   - Create unit test scenarios and test skeletons.
   - Cover both current behavior and security handoff expectations.
   - Mark tests as `current-state` vs `after-security-fix` where relevant.
+  - Apply `verification-before-completion` gate before any success claim.
+  - Use `requesting-code-review` style final quality gate when feasible.
 
 Each role must explicitly reference prior role output before adding new work.
 
@@ -80,7 +105,7 @@ Designer role tool policy:
 2. `ui-ux-pro-max`
 - Preferred source for advanced UI/UX patterns and reusable design direction.
 - Repository reference: `https://github.com/nextlevelbuilder/ui-ux-pro-max-skill`
-- If local skill is not installed, ask user for install approval or continue with fallback design rules.
+- If local skill is not installed, continue with fallback design rules.
 
 ## Automatic Designer Mode
 
@@ -105,6 +130,16 @@ Inside `[Security Expert 🛡️]:` always include these subsections:
 
 Keep handoff text directly actionable for the Developer role.
 
+## Completion Gate
+
+Before declaring "done", "fixed", or "passing":
+
+1. Run relevant verification commands.
+2. Confirm results from fresh output.
+3. Report evidence with the claim.
+
+No completion claim without verification evidence.
+
 ## Example Trigger Phrases
 
 Use this skill when user asks similar requests:
@@ -112,4 +147,4 @@ Use this skill when user asks similar requests:
 - "Multi-agent yazilim ekibi gibi calis."
 - "Her cevapta Architect, Designer, Developer, Security, QA sirasini kullan."
 - "Brifimi al ve ajanlara bolerek ilerle."
-- "Designer openai/screenshot ve ui-ux-pro-max ile calissin."
+- "Skilleri otomatik kullan, ben tek tek tetiklemeyeyim."
