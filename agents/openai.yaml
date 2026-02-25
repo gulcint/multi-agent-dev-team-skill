@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-Agent Team"
+  short_description: "Run Architect -> Designer -> Developer -> Security -> QA workflow for any software brief."
+  default_prompt: "Handle my software brief using Architect, Designer, Developer, Security Expert, and QA Engineer in this order. Designer should proactively use openai/screenshot and ui-ux-pro-max when available, without extra prompting."
