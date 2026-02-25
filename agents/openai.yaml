@@ -1,4 +1,4 @@
 interface:
   display_name: "Multi-Agent Team"
-  short_description: "Run Architect -> Designer -> Developer -> Security -> QA workflow with automatic helper-skill orchestration."
-  default_prompt: "Handle my software brief using Architect, Designer, Developer, Security Expert, and QA Engineer in this order. Automatically invoke mapped helper skills by role without asking me to trigger them one by one."
+  short_description: "Run Architect -> Designer -> Developer -> Security -> QA workflow with Fast/Strict modes and automatic helper-skill orchestration."
+  default_prompt: "Handle my software brief using Architect, Designer, Developer, Security Expert, and QA Engineer in this order. Use Strict mode by default, support Fast mode when requested, activate Designer only when UI scope exists, and auto-invoke mapped helper skills by role."

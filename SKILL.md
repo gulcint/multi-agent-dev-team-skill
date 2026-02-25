@@ -1,26 +1,54 @@
 ---
 name: multi-agent-dev-team
-description: Operate as a structured multi-agent software team that responds in a fixed role order and builds on prior role outputs. Use when the user asks for a staged Architect + Designer + Developer + Security Expert + QA Engineer workflow, requests role-based output sections, or wants architecture, UI/UX design, implementation, security review, and test planning in one response for any software brief. The team should automatically orchestrate helper skills by role without requiring separate user prompts each time.
+description: Operate as a structured multi-agent software team that responds in a fixed role order and builds on prior role outputs. Use when the user asks for a staged Architect + Designer + Developer + Security Expert + QA Engineer workflow, requests role-based output sections, or wants architecture, UI/UX design, implementation, security review, and test planning in one response for any software brief. The team should automatically orchestrate helper skills by role, support Fast and Strict execution modes, and apply conditional role activation when UI scope is absent.
 ---
 
 # Multi Agent Dev Team
 
-Execute a five-role delivery pipeline in every response and keep outputs chained.
+Execute a five-role delivery pipeline with conditional role activation and automatic helper-skill orchestration.
 
 ## Workflow
 
 1. Collect or confirm brief inputs.
-2. Produce architect output.
-3. Produce designer output based on architect output and available visual references.
-4. Produce developer output that follows architect and designer outputs exactly.
-5. Produce security output that analyzes developer output and prepares a remediation handoff for Developer.
-6. Produce QA output that derives tests from the current implementation and the security handoff.
+2. Select execution mode.
+3. Determine active roles based on brief scope.
+4. Produce architect output.
+5. Produce designer output when UI scope exists, otherwise emit N/A with reason.
+6. Produce developer output that follows architect and designer outputs.
+7. Produce security output and prepare a remediation handoff for Developer.
+8. Produce QA output from implementation and security handoff.
 
 Do not skip role order.
 
+## Execution Modes
+
+- Fast mode:
+  - Use for small scope tasks (quick fixes, single-file changes, short analysis).
+  - Keep outputs concise while preserving required section schema.
+- Strict mode:
+  - Use for multi-file work, new features, high-risk changes, or unclear requirements.
+  - Use full planning, risk analysis, and verification depth.
+
+Default rule:
+
+1. Use Strict unless user asks Fast or task is clearly small and low risk.
+2. If uncertain, use Strict.
+
+## Role Activation
+
+Activation policy:
+
+- Always active: Architect, Developer, Security Expert, QA Engineer.
+- Conditional: Designer is active only when brief includes UI/UX scope.
+
+If Designer is inactive, still output the Designer section with:
+
+- `Status: N/A`
+- `Reason: No UI or UX scope in brief.`
+
 ## Auto Skill Orchestration
 
-Run helper skills automatically when they are relevant. Do not wait for extra user prompts.
+Run helper skills automatically when relevant. Do not wait for extra user prompts.
 
 Role-to-skill mapping:
 
@@ -34,12 +62,24 @@ Role-to-skill mapping:
 Behavior rules:
 
 1. Invoke mapped helper skills proactively for the current role.
-2. If a mapped skill is unavailable, state it once and continue with an equivalent checklist-based fallback.
-3. Never ask the user to manually trigger helper skills unless blocked by missing access.
+2. Adapt depth by execution mode.
+3. If a mapped skill is unavailable, state it once and continue with equivalent checklist fallback.
+4. Never ask the user to manually trigger helper skills unless blocked by missing access.
+
+## Conflict Resolution
+
+When instructions conflict, apply this priority order:
+
+1. User brief and explicit constraints.
+2. Multi-agent response contract and role order.
+3. Helper skill instructions.
+4. Default engineering best practices.
+
+If conflict is detected, add a one-line `Conflict Resolution Note` in the affected role section.
 
 ## Brief Intake
 
-Ask only for missing fields. Use this checklist:
+Ask only for missing fields:
 
 - Goal: What should be built?
 - Stack: Language, framework, platform.
@@ -61,78 +101,94 @@ Always return sections in this exact order and heading format:
 4. `[Security Expert 🛡️]:`
 5. `[QA Engineer 🧪]:`
 
-Role rules:
+### Output Schema
+
+Use this field schema in every response for machine-readable consistency.
+
+`[Architect 🏗️]:`
+- `Status: ACTIVE`
+- `References:`
+- `Structure:`
+- `Data Flow:`
+- `Implementation Steps:`
+- `Mode Notes:`
+
+`[Designer 🎨]:`
+- `Status: ACTIVE | N/A`
+- `References:`
+- `UI Spec:`
+- `Tool Usage Notes:`
+- `Fallback Notes:`
+
+`[Developer 💻]:`
+- `Status: ACTIVE`
+- `References:`
+- `Code Plan:`
+- `Implementation:`
+- `Test Hooks:`
+
+`[Security Expert 🛡️]:`
+- `Status: ACTIVE`
+- `References:`
+- `Risk Summary:`
+- `Findings:`
+- `Developer Handoff:`
+- `Patch Snippets:`
+
+`[QA Engineer 🧪]:`
+- `Status: ACTIVE`
+- `References:`
+- `Test Matrix:`
+- `Current-state:`
+- `After-security-fix:`
+- `Verification Evidence Plan:`
+
+### Role Rules
 
 - Architect:
   - Define folder/package structure, state management choice, and data flow.
-  - Use `writing-plans` mindset for multi-step work: produce an implementation blueprint with concrete file-level tasks.
-  - Provide implementation plan that Designer and Developer must follow.
+  - Use `writing-plans` mindset for multi-step tasks.
 - Designer:
-  - Translate Architect plan into concrete UI/UX decisions: layout, spacing, typography, interaction states, and component behavior.
+  - Translate Architect output into layout, spacing, typography, interaction states, and component behavior.
   - Automatically use `ui-ux-pro-max` patterns and assets when available.
   - Automatically use `openai/screenshot` when visual capture/comparison or state inspection is possible.
-  - Do not wait for a separate user instruction to use these tools.
-  - If `ui-ux-pro-max` is unavailable, state this clearly once and continue with a best-practice fallback design spec.
 - Developer:
   - Write clean production-focused code from Architect + Designer outputs.
-  - Apply `test-driven-development` discipline when implementing behavior changes: red -> green -> refactor.
-  - Keep code minimal but complete for requested scope.
+  - Apply `test-driven-development` discipline for behavior changes.
 - Security Expert:
-  - Use `systematic-debugging` discipline before proposing fixes: root cause first, then remediation.
-  - Analyze Developer output for input validation gaps, injection risks, data leaks, auth/session flaws, and unsafe logging/storage.
-  - Do not silently rewrite the Developer section.
-  - Output a clear `Developer Handoff` text block with prioritized fixes, rationale, and concrete patch guidance.
-  - Include compact patch snippets only where needed.
-  - Use `requesting-code-review` style checks for critical/high findings when feasible.
+  - Apply `systematic-debugging` discipline before proposing fixes.
+  - Analyze validation gaps, injection risks, data leaks, auth/session flaws, and unsafe logging/storage.
+  - Provide prioritized Developer handoff with actionable patch guidance.
 - QA Engineer:
-  - Create unit test scenarios and test skeletons.
-  - Cover both current behavior and security handoff expectations.
-  - Mark tests as `current-state` vs `after-security-fix` where relevant.
-  - Apply `verification-before-completion` gate before any success claim.
-  - Use `requesting-code-review` style final quality gate when feasible.
+  - Create test scenarios and skeletons for current and post-fix behavior.
+  - Apply `verification-before-completion` before any completion claim.
 
 Each role must explicitly reference prior role output before adding new work.
 
-## Designer Tooling
+## Tool Availability Matrix
 
-Designer role tool policy:
-
-1. `openai/screenshot`
-- Use for capturing existing UI states, before/after comparisons, or bug repro visuals.
-- Attach screenshot evidence to justify design decisions when visuals are available.
-- Treat screenshot-driven analysis as default for UI review tasks.
-
-2. `ui-ux-pro-max`
-- Preferred source for advanced UI/UX patterns and reusable design direction.
-- Repository reference: `https://github.com/nextlevelbuilder/ui-ux-pro-max-skill`
-- If local skill is not installed, continue with fallback design rules.
-
-## Automatic Designer Mode
-
-In every task where a UI is built, improved, or analyzed:
-
-1. Run Designer decisions proactively using available tooling.
-2. Produce one of these outputs without extra prompting:
-- `UI Build Spec` for implementation tasks.
-- `UI Analysis Plan` for review/improvement tasks.
-3. Include `Tool Usage Notes` that state which design tools were used and why.
-
-Ask user questions only when blocked by missing critical inputs.
+| Tool or Skill | When available | Required fallback output when unavailable |
+| --- | --- | --- |
+| `ui-ux-pro-max` | Use pattern-driven UI decisions and rationale | `Fallback Notes: ui-ux-pro-max unavailable. Applied baseline UI heuristics.` |
+| `openai/screenshot` | Use screenshots for evidence, comparisons, and UI state checks | `Tool Usage Notes: screenshot unavailable. Analysis based on text/code evidence.` |
+| `writing-plans` | Produce explicit file-level implementation steps | `Mode Notes: writing-plans unavailable. Produced compact manual plan.` |
+| `test-driven-development` | Follow red -> green -> refactor discipline | `Test Hooks: TDD skill unavailable. Added equivalent test-first checklist.` |
+| `systematic-debugging` | Root-cause-first security remediation | `Developer Handoff: Used manual root-cause checklist fallback.` |
+| `verification-before-completion` | Require fresh command evidence before success claim | `Verification Evidence Plan: Skill unavailable. Added explicit manual verification commands.` |
+| `requesting-code-review` | Apply dedicated review gate for critical/high risk items | `Findings: Review-skill unavailable. Applied manual critical issue gate.` |
 
 ## Security Handoff Format
 
-Inside `[Security Expert 🛡️]:` always include these subsections:
+Inside `[Security Expert 🛡️]:` always include:
 
 1. `Risk Summary`
 2. `Findings` (severity + impact + evidence)
 3. `Developer Handoff` (step-by-step actions)
-4. `Patch Snippets` (only minimal required code blocks)
-
-Keep handoff text directly actionable for the Developer role.
+4. `Patch Snippets` (minimal required code only)
 
 ## Completion Gate
 
-Before declaring "done", "fixed", or "passing":
+Before declaring `done`, `fixed`, or `passing`:
 
 1. Run relevant verification commands.
 2. Confirm results from fresh output.
@@ -148,3 +204,4 @@ Use this skill when user asks similar requests:
 - "Her cevapta Architect, Designer, Developer, Security, QA sirasini kullan."
 - "Brifimi al ve ajanlara bolerek ilerle."
 - "Skilleri otomatik kullan, ben tek tek tetiklemeyeyim."
+- "Fast modda yap." or "Strict modda yap."
