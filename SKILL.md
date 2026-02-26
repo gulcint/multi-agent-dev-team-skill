@@ -1,6 +1,6 @@
 ---
 name: multi-agent-dev-team
-description: Operate as a structured multi-agent software team that responds in a fixed role order and builds on prior role outputs. Use when the user asks for a staged Architect + Designer + Developer + Security Expert + QA Engineer workflow, requests role-based output sections, or wants architecture, UI/UX design, implementation, security review, and test planning in one response for any software brief. The team should automatically orchestrate helper skills by role, support Fast and Strict execution modes, and apply conditional role activation when UI scope is absent.
+description: Operate as a structured multi-agent software team that responds in a fixed role order and builds on prior role outputs. Use when the user asks for a staged Architect + Designer + Developer + Security Expert + QA Engineer workflow, requests role-based output sections, or wants architecture, UI/UX design, implementation, security review, and Android emulator APK delivery in one response for any software brief. The team should automatically orchestrate helper skills by role, support Fast and Strict execution modes, and apply conditional role activation when UI scope is absent.
 ---
 
 # Multi Agent Dev Team
@@ -17,6 +17,7 @@ Execute a five-role delivery pipeline with conditional role activation and autom
 6. Produce developer output that follows architect and designer outputs.
 7. Produce security output and prepare a remediation handoff for Developer.
 8. Produce QA output from implementation and security handoff.
+9. For Android scope, after each successful development step build and install the refreshed APK on emulator.
 
 Do not skip role order.
 
@@ -34,15 +35,16 @@ Default rule:
 1. Use Strict unless user asks Fast or task is clearly small and low risk.
 2. If uncertain, use Strict.
 
-### TDD Policy by Mode
+### Android Emulator Delivery by Mode
 
-- Strict mode:
-  - Keep `test-driven-development` as default for feature and bugfix work.
-  - Require red -> green -> refactor evidence in `Test Hooks`.
-- Fast mode:
-  - Use `TDD-lite`: include at least one regression-oriented assertion or focused test hook.
-  - Full red -> green -> refactor is optional only for tiny low-risk edits.
-  - Never skip verification commands before completion.
+- Strict mode (Android scope):
+  - Run a clean debug build before install.
+  - Install refreshed APK to a running emulator with replace (`adb install -r`).
+  - Report APK path, emulator serial, and install result in `Build Hooks`.
+- Fast mode (Android scope):
+  - Run incremental debug build before install.
+  - Install refreshed APK to a running emulator with replace (`adb install -r`).
+  - Report APK path, emulator serial, and install result in `Build Hooks`.
 
 ## Role Activation
 
@@ -64,7 +66,7 @@ Role-to-skill mapping:
 
 - Architect -> `writing-plans`
 - Designer -> `ui-ux-pro-max` and `openai/screenshot`
-- Developer -> `test-driven-development`
+- Developer -> `scripts/android_emulator_sync.sh` (Android scope only)
 - Security Expert -> `systematic-debugging`
 - QA Engineer -> `verification-before-completion`
 - Cross-check gate (Security/QA) -> `requesting-code-review`
@@ -72,8 +74,8 @@ Role-to-skill mapping:
 Behavior rules:
 
 1. Invoke mapped helper skills proactively for the current role.
-2. Adapt depth by execution mode, including full TDD in Strict and TDD-lite in Fast.
-3. If a mapped skill is unavailable, state it once and continue with equivalent checklist fallback.
+2. Adapt depth by execution mode: Strict -> clean build + reinstall, Fast -> incremental build + reinstall.
+3. If a mapped skill/tool is unavailable, state it once and continue with equivalent checklist fallback.
 4. Never ask the user to manually trigger helper skills unless blocked by missing access.
 
 ## Conflict Resolution
@@ -97,6 +99,7 @@ Ask only for missing fields:
 - Constraints: Style guide, package rules, architecture preference.
 - Design inputs: Brand guide, reference screens, expected UX tone, device targets.
 - Security requirements: Validation, storage, auth constraints.
+- Android delivery requirements: Project root, module (default `app`), variant (default `Debug`), package name, emulator target.
 - QA expectations: Unit tests only or wider test coverage.
 
 If details are missing, ask concise follow-up questions before coding.
@@ -135,7 +138,7 @@ Use this field schema in every response for machine-readable consistency.
 - `References:`
 - `Code Plan:`
 - `Implementation:`
-- `Test Hooks:`
+- `Build Hooks:`
 
 `[Security Expert 🛡️]:`
 - `Status: ACTIVE`
@@ -164,10 +167,11 @@ Use this field schema in every response for machine-readable consistency.
   - Automatically use `openai/screenshot` when visual capture/comparison or state inspection is possible.
 - Developer:
   - Write clean production-focused code from Architect + Designer outputs.
-  - Apply mode-aware testing policy for behavior changes.
-  - Strict mode: full `test-driven-development` (red -> green -> refactor).
-  - Fast mode: `TDD-lite` with explicit regression checks.
-  - Never ship behavior changes without test evidence or clear verification commands.
+  - Apply mode-aware build and emulator install policy for Android behavior changes.
+  - After each successful Android development step, rerun emulator sync before moving on.
+  - Strict mode (Android): run `scripts/android_emulator_sync.sh --mode strict --project-root <path> --module <module> --variant Debug --package <applicationId>`.
+  - Fast mode (Android): run `scripts/android_emulator_sync.sh --mode fast --project-root <path> --module <module> --variant Debug --package <applicationId>`.
+  - For non-Android work, provide explicit verification commands before completion claims.
 - Security Expert:
   - Apply `systematic-debugging` discipline before proposing fixes.
   - Analyze validation gaps, injection risks, data leaks, auth/session flaws, and unsafe logging/storage.
@@ -185,7 +189,7 @@ Each role must explicitly reference prior role output before adding new work.
 | `ui-ux-pro-max` | Use pattern-driven UI decisions and rationale | `Fallback Notes: ui-ux-pro-max unavailable. Applied baseline UI heuristics.` |
 | `openai/screenshot` | Use screenshots for evidence, comparisons, and UI state checks | `Tool Usage Notes: screenshot unavailable. Analysis based on text/code evidence.` |
 | `writing-plans` | Produce explicit file-level implementation steps | `Mode Notes: writing-plans unavailable. Produced compact manual plan.` |
-| `test-driven-development` | Strict: enforce red -> green -> refactor. Fast: use TDD-lite regression checks. | `Test Hooks: TDD skill unavailable. Strict -> manual red/green checklist. Fast -> regression assertion plus verification commands.` |
+| `scripts/android_emulator_sync.sh` | Android scope: build updated APK and install it on a running emulator after successful development. | `Build Hooks: Emulator sync script unavailable. Run manual Gradle build + adb install -r with command evidence.` |
 | `systematic-debugging` | Root-cause-first security remediation | `Developer Handoff: Used manual root-cause checklist fallback.` |
 | `verification-before-completion` | Require fresh command evidence before success claim | `Verification Evidence Plan: Skill unavailable. Added explicit manual verification commands.` |
 | `requesting-code-review` | Apply dedicated review gate for critical/high risk items | `Findings: Review-skill unavailable. Applied manual critical issue gate.` |
@@ -205,7 +209,8 @@ Before declaring `done`, `fixed`, or `passing`:
 
 1. Run relevant verification commands.
 2. Confirm results from fresh output.
-3. Report evidence with the claim.
+3. For Android scope, include fresh APK build + emulator install evidence.
+4. Report evidence with the claim.
 
 No completion claim without verification evidence.
 

@@ -14,6 +14,7 @@ The skill is designed for any software brief and enforces chained outputs where 
 
 - Designer proactively uses `ui-ux-pro-max` patterns when available.
 - Designer proactively uses `openai/screenshot` for visual analysis when possible.
+- Developer runs Android APK build + emulator install sync after each successful Android development step.
 - Security Expert produces a `Developer Handoff` with prioritized fixes.
 - QA Engineer derives tests from implementation and security findings.
 
@@ -21,6 +22,7 @@ The skill is designed for any software brief and enforces chained outputs where 
 
 - `SKILL.md`: Main behavior and response contract.
 - `agents/openai.yaml`: UI metadata and default prompt.
+- `scripts/android_emulator_sync.sh`: Android APK build + emulator install helper.
 
 ## Usage Example
 

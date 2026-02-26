@@ -1,4 +1,4 @@
 interface:
   display_name: "Multi-Agent Team"
-  short_description: "Run Architect -> Designer -> Developer -> Security -> QA workflow with Fast/Strict modes and automatic helper-skill orchestration."
-  default_prompt: "Handle my software brief using Architect, Designer, Developer, Security Expert, and QA Engineer in this order. Use Strict mode by default, support Fast mode when requested, activate Designer only when UI scope exists, auto-invoke mapped helper skills by role, and apply mode-aware TDD (Strict full, Fast lite)."
+  short_description: "Run Architect -> Designer -> Developer -> Security -> QA workflow with Fast/Strict modes, helper-skill orchestration, and Android emulator APK sync."
+  default_prompt: "Handle my software brief using Architect, Designer, Developer, Security Expert, and QA Engineer in this order. Use Strict mode by default, support Fast mode when requested, activate Designer only when UI scope exists, auto-invoke mapped helper skills by role, and for Android scope build and install the updated APK on emulator after each successful development step."
